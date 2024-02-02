@@ -10,3 +10,6 @@ RUN git clone https://github.com/gameover98/testmc4.git
 RUN wget https://maven.minecraftforge.net/net/minecraftforge/forge/1.20.1-47.2.20/forge-1.20.1-47.2.20-installer.jar
 RUN java -jar forge-1.20.1-47.2.20-installer.jar --installServer
 
+EXPOSE 25565
+
+CMD [ "./run.sh" ]
