@@ -1,0 +1,47 @@
+---
+- name: Configure System Settings
+  hosts: all
+  become: true
+  tasks:
+    - name: Add entries to /etc/fstab
+      blockinfile:
+        path: /etc/fstab
+        block: |
+          fs-1d9feaa9:/ /opt efs iam,tls,_netdev
+          fs-329fea86:/ /home efs iam,tls,_netdev
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    
+    - name: Set timezone to America/New_York
+      timezone:
+        name: America/New_York
+
+    - name: Configure systemd-resolved
+      blockinfile:
+        path: /etc/systemd/resolved.conf
+        block: |
+          DNS=172.25.72.252 172.25.73.86
+          Domains=cumc.columbia.edu ccc.columbia.edu cpmc.columbia.edu columbia.edu
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+
+    - name: Restart systemd-resolved
+      systemd:
+        name: systemd-resolved
+        state: restarted
+
+    - name: Add domain admins to sudoers
+      copy:
+        content: |
+          %sudoers@cisr.columbia.edu ALL=(ALL) NOPASSWD: ALL
+        dest: /etc/sudoers.d/domain_admins
+        mode: 0440
+
+    - name: Configure sssd to not use fully qualified names
+      lineinfile:
+        path: /etc/sssd/sssd.conf
+        regexp: '^use_fully_qualified_names = True'
+        line: 'use_fully_qualified_names = False'
+
+    - name: Restart sssd
+      systemd:
+        name: sssd
+        state: restarted
